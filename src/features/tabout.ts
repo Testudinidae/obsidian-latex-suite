@@ -58,9 +58,16 @@ const matchRightCommand = (text: string, startIndex: number): number => {
 
 	const afterTokenIndex = startIndex + RIGHT_TOKEN.length;
 
+	let whitespaceCount = 0;
+	while (afterTokenIndex + whitespaceCount < text.length && /\s/.test(text.charAt(afterTokenIndex + whitespaceCount))) {
+		whitespaceCount++;
+	}
+
+	const delimiterStartIndex = afterTokenIndex + whitespaceCount;
+
 	for (const delimiter of DELIMITERS) {
-		if (text.slice(afterTokenIndex, afterTokenIndex + delimiter.length) === delimiter) {
-			return RIGHT_TOKEN.length + delimiter.length;
+		if (text.slice(delimiterStartIndex, delimiterStartIndex + delimiter.length) === delimiter) {
+			return RIGHT_TOKEN.length + whitespaceCount + delimiter.length;
 		}
 	}
 
