@@ -3,8 +3,45 @@ import { replaceRange, setCursor, getCharacterAtPos } from "src/utils/editor_uti
 import { Context } from "src/utils/context";
 
 
+const LEFT_TOKEN = "\\left";
+const RIGHT_TOKEN = "\\right";
+const OPENING_BRACKETS = [
+	"(",
+	"[", "\\lbrack",
+	"{",
+	"\\{", "\\lbrace",
+	"\\langle",
+	"\\lceil", "\\lfloor",
+	"\\vert",
+	"\\|", "\\Vert",
+	"$"
+].sort((a, b) => b.length - a.length);
+const CLOSING_BRACKETS = [
+	")",
+	"]", "\\rbrack",
+	"}",
+	"\\}", "\\rbrace",
+	"\\rangle",
+	"\\rceil", "\\rfloor",
+	"\\vert",
+	"\\|", "\\Vert",
+	"$"
+].sort((a, b) => b.length - a.length);
+
+
+const matchClosingBracket = (text: string, startIndex: number): number => {
+	for (const delimiter of CLOSING_BRACKETS) {
+		if (text.slice(startIndex, startIndex + delimiter.length) === delimiter) {
+			return delimiter.length;
+		}
+	}
+
+	return 0;
+}
+
+
 export const tabout = (view: EditorView, ctx: Context):boolean => {
-    if (!ctx.mode.inMath()) return false;
+	if (!ctx.mode.inMath()) return false;
 
 	const result = ctx.getBounds();
 	if (!result) return false;
@@ -14,17 +51,11 @@ export const tabout = (view: EditorView, ctx: Context):boolean => {
 	const d = view.state.doc;
 	const text = d.toString();
 
-	// Move to the next closing bracket: }, ), ], >, |, or \\rangle
-	const rangle = "\\rangle";
-
+	// Move to the next closing bracket
 	for (let i = pos; i < end; i++) {
-		if (["}", ")", "]", ">", "|", "$"].contains(text.charAt(i))) {
-			setCursor(view, i+1);
-
-			return true;
-		}
-		else if (text.slice(i, i + rangle.length) === rangle) {
-			setCursor(view, i + rangle.length);
+		const rightBracketLength = matchClosingBracket(text, i);
+		if (rightBracketLength > 0) {
+			setCursor(view, i + rightBracketLength);
 
 			return true;
 		}
