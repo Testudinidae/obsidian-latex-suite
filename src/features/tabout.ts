@@ -27,6 +27,17 @@ const CLOSING_BRACKETS = [
 	"\\|", "\\Vert",
 	"$"
 ].sort((a, b) => b.length - a.length);
+const DELIMITERS = [
+	"(", ")",
+	"[", "]", "\\lbrack", "\\rbrack",
+	"\\{", "\\}", "\\lbrace", "\\rbrace",
+	"<", ">", "\\langle", "\\rangle", "\\lt", "\\gt",
+	"\\lfloor", "\\rfloor", "\\lceil", "\\rceil",
+	"/", "\\\\", "\\backslash",
+	"|", "\\vert",
+	"\\|", "\\Vert",
+	"."
+].sort((a, b) => b.length - a.length);
 
 
 const matchClosingBracket = (text: string, startIndex: number): number => {
@@ -37,6 +48,25 @@ const matchClosingBracket = (text: string, startIndex: number): number => {
 	}
 
 	return 0;
+}
+
+
+const matchRightCommand = (text: string, startIndex: number): number => {
+	if (!text.startsWith(RIGHT_TOKEN, startIndex)) {
+		return 0;
+	}
+
+	const afterTokenIndex = startIndex + RIGHT_TOKEN.length;
+
+	for (const delimiter of DELIMITERS) {
+		if (text.slice(afterTokenIndex, afterTokenIndex + delimiter.length) === delimiter) {
+			return RIGHT_TOKEN.length + delimiter.length;
+		}
+	}
+
+	// If no matching delimiter is found, return the length of \right
+	// This helps users to easily identify and correct missing delimiter
+	return RIGHT_TOKEN.length;
 }
 
 
@@ -53,6 +83,13 @@ export const tabout = (view: EditorView, ctx: Context):boolean => {
 
 	// Move to the next closing bracket
 	for (let i = pos; i < end; i++) {
+		const rightCommandLength = matchRightCommand(text, i);
+		if (rightCommandLength > 0) {
+			setCursor(view, i + rightCommandLength);
+
+			return true;
+		}
+
 		const rightBracketLength = matchClosingBracket(text, i);
 		if (rightBracketLength > 0) {
 			setCursor(view, i + rightBracketLength);
