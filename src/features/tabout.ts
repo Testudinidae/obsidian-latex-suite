@@ -3,19 +3,7 @@ import { replaceRange, setCursor, getCharacterAtPos } from "src/utils/editor_uti
 import { Context } from "src/utils/context";
 
 
-const LEFT_TOKEN = "\\left";
 const RIGHT_TOKEN = "\\right";
-const OPENING_BRACKETS = [
-	"(",
-	"[", "\\lbrack",
-	"{",
-	"\\{", "\\lbrace",
-	"\\langle",
-	"\\lceil", "\\lfloor",
-	"\\vert",
-	"\\|", "\\Vert",
-	"$"
-].sort((a, b) => b.length - a.length);
 const CLOSING_BRACKETS = [
 	")",
 	"]", "\\rbrack",
