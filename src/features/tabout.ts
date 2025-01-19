@@ -14,7 +14,7 @@ const CLOSING_BRACKETS = [
 	"\\vert",
 	"\\|", "\\Vert",
 	"$"
-].sort((a, b) => b.length - a.length);
+];
 const DELIMITERS = [
 	"(", ")",
 	"[", "]", "\\lbrack", "\\rbrack",
@@ -25,11 +25,13 @@ const DELIMITERS = [
 	"|", "\\vert",
 	"\\|", "\\Vert",
 	"."
-].sort((a, b) => b.length - a.length);
+];
 
 
 const matchClosingBracket = (text: string, startIndex: number): number => {
-	for (const delimiter of CLOSING_BRACKETS) {
+	const sortedDelimiter = [...CLOSING_BRACKETS].sort((a, b) => b.length - a.length);
+
+	for (const delimiter of sortedDelimiter) {
 		if (text.slice(startIndex, startIndex + delimiter.length) === delimiter) {
 			return delimiter.length;
 		}
@@ -50,10 +52,10 @@ const matchRightCommand = (text: string, startIndex: number): number => {
 	while (afterTokenIndex + whitespaceCount < text.length && /\s/.test(text.charAt(afterTokenIndex + whitespaceCount))) {
 		whitespaceCount++;
 	}
-
 	const delimiterStartIndex = afterTokenIndex + whitespaceCount;
 
-	for (const delimiter of DELIMITERS) {
+	const sortedDelimiter = [...DELIMITERS].sort((a, b) => b.length - a.length);
+	for (const delimiter of sortedDelimiter) {
 		if (text.slice(delimiterStartIndex, delimiterStartIndex + delimiter.length) === delimiter) {
 			return RIGHT_TOKEN.length + whitespaceCount + delimiter.length;
 		}
