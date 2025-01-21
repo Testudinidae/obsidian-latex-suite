@@ -24,6 +24,7 @@ const DELIMITERS = [
 	"/", "\\\\", "\\backslash",
 	"|", "\\vert",
 	"\\|", "\\Vert",
+	"\\uparrow", "\\downarrow", "\\Uparrow", "\\Downarrow",
 	"."
 ];
 
