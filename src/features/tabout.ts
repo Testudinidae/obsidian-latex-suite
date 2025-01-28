@@ -33,7 +33,7 @@ const matchClosingBracket = (text: string, startIndex: number): number => {
 	const sortedDelimiter = [...CLOSING_BRACKETS].sort((a, b) => b.length - a.length);
 
 	for (const delimiter of sortedDelimiter) {
-		if (text.slice(startIndex, startIndex + delimiter.length) === delimiter) {
+		if (text.startsWith(delimiter, startIndex)) {
 			return delimiter.length;
 		}
 	}
@@ -57,7 +57,7 @@ const matchRightCommand = (text: string, startIndex: number): number => {
 
 	const sortedDelimiter = [...DELIMITERS].sort((a, b) => b.length - a.length);
 	for (const delimiter of sortedDelimiter) {
-		if (text.slice(delimiterStartIndex, delimiterStartIndex + delimiter.length) === delimiter) {
+		if (text.startsWith(delimiter, delimiterStartIndex)) {
 			return RIGHT_TOKEN.length + whitespaceCount + delimiter.length;
 		}
 	}
@@ -68,7 +68,7 @@ const matchRightCommand = (text: string, startIndex: number): number => {
 }
 
 
-export const tabout = (view: EditorView, ctx: Context):boolean => {
+export const tabout = (view: EditorView, ctx: Context): boolean => {
 	if (!ctx.mode.inMath()) return false;
 
 	const result = ctx.getBounds();
@@ -113,7 +113,7 @@ export const tabout = (view: EditorView, ctx: Context):boolean => {
 	}
 	else {
 		// First, locate the $$ symbol
-		const dollarLine = d.lineAt(end+2);
+		const dollarLine = d.lineAt(end + 2);
 
 		// If there's no line after the equation, create one
 
