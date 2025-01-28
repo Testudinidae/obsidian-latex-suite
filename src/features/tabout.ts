@@ -82,6 +82,7 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 
 	const result = ctx.getBounds();
 	if (!result) return false;
+	const start = result.start;
 	const end = result.end;
 
 	const pos = view.state.selection.main.to;
@@ -89,7 +90,7 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 	const text = d.toString();
 
 	// Move to the next closing bracket
-	let i = pos
+	let i = start
 	while (i < end) {
 		const leftDelimiterLength = findDelimiterCommandWithDelimiterLength(LEFT_COMMANDS, text, i);
 		if (leftDelimiterLength > 0) {
@@ -100,14 +101,22 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 
 		const rightDelimiterLength = findDelimiterCommandWithDelimiterLength(RIGHT_COMMANDS, text, i);
 		if (rightDelimiterLength > 0) {
-			setCursor(view, i + rightDelimiterLength);
+			i += rightDelimiterLength;
+
+			if (i <= pos) continue;
+
+			setCursor(view, i);
 
 			return true;
 		}
 
 		const closingSymbolLength = findClosingSymbolLength(text, i);
 		if (closingSymbolLength > 0) {
-			setCursor(view, i + closingSymbolLength);
+			i += closingSymbolLength;
+
+			if (i <= pos) continue;
+
+			setCursor(view, i);
 
 			return true;
 		}
