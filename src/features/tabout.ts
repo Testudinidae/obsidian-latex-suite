@@ -3,8 +3,11 @@ import { replaceRange, setCursor, getCharacterAtPos } from "src/utils/editor_uti
 import { Context } from "src/utils/context";
 
 
-const RIGHT_TOKEN = "\\right";
-const CLOSING_BRACKETS = [
+const RIGHT_COMMANDS = [
+	"\\right",
+	"\\bigr", "\\Bigr", "\\biggr", "\\Biggr"
+];
+const CLOSING_SYMBOLS = [
 	")",
 	"]", "\\rbrack",
 	"}",
@@ -29,42 +32,44 @@ const DELIMITERS = [
 ];
 
 
-const matchClosingBracket = (text: string, startIndex: number): number => {
-	const sortedDelimiter = [...CLOSING_BRACKETS].sort((a, b) => b.length - a.length);
+const findClosingSymbolLength = (text: string, startIndex: number): number => {
+	const sortedSymbols = [...CLOSING_SYMBOLS].sort((a, b) => b.length - a.length);
+	const matchedSymbol = sortedSymbols.find((symbol) => text.startsWith(symbol, startIndex));
 
-	for (const delimiter of sortedDelimiter) {
-		if (text.startsWith(delimiter, startIndex)) {
-			return delimiter.length;
-		}
+	if (matchedSymbol) {
+		return matchedSymbol.length;
 	}
 
 	return 0;
 }
 
 
-const matchRightCommand = (text: string, startIndex: number): number => {
-	if (!text.startsWith(RIGHT_TOKEN, startIndex)) {
+const findRightCommandWithDelimiterLength = (text: string, startIndex: number): number => {
+	const sortedCommands = [...RIGHT_COMMANDS].sort((a, b) => b.length - a.length);
+	const matchedCommand = sortedCommands.find((command) => text.startsWith(command, startIndex));
+
+	if (!matchedCommand) {
 		return 0;
 	}
 
-	const afterTokenIndex = startIndex + RIGHT_TOKEN.length;
+	const afterCommandIndex = startIndex + matchedCommand.length;
 
 	let whitespaceCount = 0;
-	while (afterTokenIndex + whitespaceCount < text.length && /\s/.test(text.charAt(afterTokenIndex + whitespaceCount))) {
+	while (afterCommandIndex + whitespaceCount < text.length && /\s/.test(text.charAt(afterCommandIndex + whitespaceCount))) {
 		whitespaceCount++;
 	}
-	const delimiterStartIndex = afterTokenIndex + whitespaceCount;
+	const delimiterStartIndex = afterCommandIndex + whitespaceCount;
 
-	const sortedDelimiter = [...DELIMITERS].sort((a, b) => b.length - a.length);
-	for (const delimiter of sortedDelimiter) {
-		if (text.startsWith(delimiter, delimiterStartIndex)) {
-			return RIGHT_TOKEN.length + whitespaceCount + delimiter.length;
-		}
+	const sortedDelimiters = [...DELIMITERS].sort((a, b) => b.length - a.length);
+	const matchedDelimiter = sortedDelimiters.find((delimiter) => text.startsWith(delimiter, delimiterStartIndex));
+
+	if (matchedDelimiter) {
+		return matchedCommand.length + whitespaceCount + matchedDelimiter.length;
 	}
 
-	// If no matching delimiter is found, return the length of \right
+	// If no matching delimiter is found, return the length of command
 	// This helps users to easily identify and correct missing delimiter
-	return RIGHT_TOKEN.length;
+	return matchedCommand.length;
 }
 
 
@@ -81,16 +86,16 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 
 	// Move to the next closing bracket
 	for (let i = pos; i < end; i++) {
-		const rightCommandLength = matchRightCommand(text, i);
-		if (rightCommandLength > 0) {
-			setCursor(view, i + rightCommandLength);
+		const rightDelimiterLength = findRightCommandWithDelimiterLength(text, i);
+		if (rightDelimiterLength > 0) {
+			setCursor(view, i + rightDelimiterLength);
 
 			return true;
 		}
 
-		const rightBracketLength = matchClosingBracket(text, i);
-		if (rightBracketLength > 0) {
-			setCursor(view, i + rightBracketLength);
+		const closingSymbolLength = findClosingSymbolLength(text, i);
+		if (closingSymbolLength > 0) {
+			setCursor(view, i + closingSymbolLength);
 
 			return true;
 		}
