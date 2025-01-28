@@ -3,6 +3,10 @@ import { replaceRange, setCursor, getCharacterAtPos } from "src/utils/editor_uti
 import { Context } from "src/utils/context";
 
 
+const LEFT_COMMANDS = [
+	"\\left",
+	"\\bigl", "\\Bigl", "\\biggl", "\\Biggl"
+];
 const RIGHT_COMMANDS = [
 	"\\right",
 	"\\bigr", "\\Bigr", "\\biggr", "\\Biggr"
@@ -44,8 +48,8 @@ const findClosingSymbolLength = (text: string, startIndex: number): number => {
 }
 
 
-const findRightCommandWithDelimiterLength = (text: string, startIndex: number): number => {
-	const sortedCommands = [...RIGHT_COMMANDS].sort((a, b) => b.length - a.length);
+const findDelimiterCommandWithDelimiterLength = (delimiterCommands: string[], text: string, startIndex: number): number => {
+	const sortedCommands = [...delimiterCommands].sort((a, b) => b.length - a.length);
 	const matchedCommand = sortedCommands.find((command) => text.startsWith(command, startIndex));
 
 	if (!matchedCommand) {
@@ -85,8 +89,16 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 	const text = d.toString();
 
 	// Move to the next closing bracket
-	for (let i = pos; i < end; i++) {
-		const rightDelimiterLength = findRightCommandWithDelimiterLength(text, i);
+	let i = pos
+	while (i < end) {
+		const leftDelimiterLength = findDelimiterCommandWithDelimiterLength(LEFT_COMMANDS, text, i);
+		if (leftDelimiterLength > 0) {
+			i += leftDelimiterLength;
+
+			continue;
+		}
+
+		const rightDelimiterLength = findDelimiterCommandWithDelimiterLength(RIGHT_COMMANDS, text, i);
 		if (rightDelimiterLength > 0) {
 			setCursor(view, i + rightDelimiterLength);
 
@@ -99,6 +111,8 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 
 			return true;
 		}
+
+		i++;
 	}
 
 
