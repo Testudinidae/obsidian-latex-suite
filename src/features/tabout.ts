@@ -11,10 +11,8 @@ const CLOSING_BRACKETS = [
 	"\\}", "\\rbrace",
 	"\\rangle",
 	"\\rceil", "\\rfloor",
-	"\\urcorner",
-	"\\vert",
-	"\\|", "\\Vert",
-	"$"
+	"\\rvert", "\\rVert",
+	"\\urcorner"
 ];
 const DELIMITERS = [
 	"(", ")",
@@ -23,8 +21,8 @@ const DELIMITERS = [
 	"<", ">", "\\langle", "\\rangle", "\\lt", "\\gt",
 	"\\lfloor", "\\rfloor", "\\lceil", "\\rceil",
 	"/", "\\\\", "\\backslash",
-	"|", "\\vert",
-	"\\|", "\\Vert",
+	"|", "\\vert", "\\lvert", "\\rvert",
+	"\\|", "\\Vert", "\\lVert", "\\rVert",
 	"\\uparrow", "\\downarrow", "\\Uparrow", "\\Downarrow",
 	"\\ulcorner", "\\urcorner",
 	"."
