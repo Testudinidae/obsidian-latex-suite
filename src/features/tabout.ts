@@ -14,24 +14,28 @@ const RIGHT_COMMANDS = [
 const CLOSING_SYMBOLS = [
 	")",
 	"]", "\\rbrack",
-	"}",
 	"\\}", "\\rbrace",
 	"\\rangle",
-	"\\rceil", "\\rfloor",
-	"\\rvert", "\\rVert",
-	"\\urcorner"
+	"\\rvert",
+	"\\rVert",
+	"\\rfloor",
+	"\\rceil",
+	"\\urcorner",
+	"}"
 ];
 const DELIMITERS = [
 	"(", ")",
 	"[", "]", "\\lbrack", "\\rbrack",
 	"\\{", "\\}", "\\lbrace", "\\rbrace",
 	"<", ">", "\\langle", "\\rangle", "\\lt", "\\gt",
-	"\\lfloor", "\\rfloor", "\\lceil", "\\rceil",
-	"/", "\\\\", "\\backslash",
 	"|", "\\vert", "\\lvert", "\\rvert",
 	"\\|", "\\Vert", "\\lVert", "\\rVert",
-	"\\uparrow", "\\downarrow", "\\Uparrow", "\\Downarrow",
+	"\\lfloor", "\\rfloor",
+	"\\lceil", "\\rceil",
 	"\\ulcorner", "\\urcorner",
+	"/", "\\\\", "\\backslash",
+	"\\uparrow", "\\downarrow",
+	"\\Uparrow", "\\Downarrow",
 	"."
 ];
 
