@@ -36,9 +36,35 @@ const DELIMITERS = [
 ];
 
 
+const isCommandEnd = (str: string): boolean => {
+	return /\\[a-zA-Z]+\\*?$/.test(str);
+}
+
+
+const isMatchingCommand = (text: string, command: string, startIndex: number): boolean => {
+	if (!text.startsWith(command, startIndex)) {
+		return false;
+	}
+
+	const nextChar = text.charAt(startIndex + command.length);
+	const isEndOfCommand = !/[a-zA-Z]/.test(nextChar);
+	return isEndOfCommand;
+}
+
+
+const isMatchingSymbol = (text: string, symbol: string, startIndex: number): boolean => {
+	if (isCommandEnd(symbol)) {
+		return isMatchingCommand(text, symbol, startIndex);
+	}
+	else {
+		return text.startsWith(symbol, startIndex);
+	}
+}
+
+
 const findClosingSymbolLength = (text: string, startIndex: number): number => {
 	const sortedSymbols = [...CLOSING_SYMBOLS].sort((a, b) => b.length - a.length);
-	const matchedSymbol = sortedSymbols.find((symbol) => text.startsWith(symbol, startIndex));
+	const matchedSymbol = sortedSymbols.find((symbol) => isMatchingSymbol(text, symbol, startIndex));
 
 	if (matchedSymbol) {
 		return matchedSymbol.length;
@@ -50,7 +76,7 @@ const findClosingSymbolLength = (text: string, startIndex: number): number => {
 
 const findDelimiterCommandWithDelimiterLength = (delimiterCommands: string[], text: string, startIndex: number): number => {
 	const sortedCommands = [...delimiterCommands].sort((a, b) => b.length - a.length);
-	const matchedCommand = sortedCommands.find((command) => text.startsWith(command, startIndex));
+	const matchedCommand = sortedCommands.find((command) => isMatchingCommand(text, command, startIndex));
 
 	if (!matchedCommand) {
 		return 0;
@@ -65,7 +91,7 @@ const findDelimiterCommandWithDelimiterLength = (delimiterCommands: string[], te
 	const delimiterStartIndex = afterCommandIndex + whitespaceCount;
 
 	const sortedDelimiters = [...DELIMITERS].sort((a, b) => b.length - a.length);
-	const matchedDelimiter = sortedDelimiters.find((delimiter) => text.startsWith(delimiter, delimiterStartIndex));
+	const matchedDelimiter = sortedDelimiters.find((delimiter) => isMatchingSymbol(text, delimiter, delimiterStartIndex));
 
 	if (matchedDelimiter) {
 		return matchedCommand.length + whitespaceCount + matchedDelimiter.length;
