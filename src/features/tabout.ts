@@ -4,15 +4,15 @@ import { Context } from "src/utils/context";
 import { getLatexSuiteConfig } from "src/snippets/codemirror/config";
 
 
-const SORTED_LEFT_COMMANDS = [
+export const SORTED_LEFT_COMMANDS = [
 	"\\left",
 	"\\bigl", "\\Bigl", "\\biggl", "\\Biggl"
 ].sort((a, b) => b.length - a.length);
-const SORTED_RIGHT_COMMANDS = [
+export const SORTED_RIGHT_COMMANDS = [
 	"\\right",
 	"\\bigr", "\\Bigr", "\\biggr", "\\Biggr"
 ].sort((a, b) => b.length - a.length);
-const SORTED_DELIMITERS = [
+export const SORTED_DELIMITERS = [
 	"(", ")",
 	"[", "]", "\\lbrack", "\\rbrack",
 	"\\{", "\\}", "\\lbrace", "\\rbrace",
@@ -29,7 +29,7 @@ const SORTED_DELIMITERS = [
 ].sort((a, b) => b.length - a.length);
 
 
-const isCommandEnd = (str: string): boolean => {
+export const isCommandEnd = (str: string): boolean => {
 	return /\\[a-zA-Z]+\\*?$/.test(str);
 }
 

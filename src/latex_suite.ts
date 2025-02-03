@@ -3,6 +3,7 @@ import { EditorView, ViewUpdate } from "@codemirror/view";
 import { runSnippets } from "./features/run_snippets";
 import { runAutoFraction } from "./features/autofraction";
 import { tabout, shouldTaboutByCloseBracket } from "./features/tabout";
+import { reverseTabout } from "./features/reverse_tabout";
 import { runMatrixShortcuts } from "./features/matrix_shortcuts";
 
 import { Context } from "./utils/context";
@@ -100,10 +101,18 @@ export const handleKeydown = (key: string, shiftKey: boolean, ctrlKey: boolean, 
 	if (settings.taboutEnabled) {
 		// check if the main cursor has something selected since ctx.mode only checks the main cursor.
 		//  This does give weird behaviour with multicursor.
-		if ((key === "Tab" && view.state.selection.main.empty) 
-			|| shouldTaboutByCloseBracket(view, key)) {
-			success = tabout(view, ctx);
+		if ((key === "Tab" && view.state.selection.main.empty)){
+			if(shiftKey){
+				success = reverseTabout(view, ctx);
+			}
+			else{
+				success = tabout(view, ctx);
+			}
 
+			if (success) return true;
+		}
+
+		if (shouldTaboutByCloseBracket(view, key)) {
 			if (success) return true;
 		}
 	}
