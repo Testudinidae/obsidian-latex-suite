@@ -45,22 +45,22 @@ const isMatchingCommand = (text: string, command: string, startIndex: number): b
 }
 
 
-const isMatchingSymbol = (text: string, symbol: string, startIndex: number): boolean => {
-	if (isCommandEnd(symbol)) {
-		return isMatchingCommand(text, symbol, startIndex);
+const isMatchingToken = (text: string, token: string, startIndex: number): boolean => {
+	if (isCommandEnd(token)) {
+		return isMatchingCommand(text, token, startIndex);
 	}
 	else {
-		return text.startsWith(symbol, startIndex);
+		return text.startsWith(token, startIndex);
 	}
 }
 
 
-const findClosingSymbolLength = (closingSymbols: string[], text: string, startIndex: number): number => {
-	const sortedSymbols = [...closingSymbols].sort((a, b) => b.length - a.length);
-	const matchedSymbol = sortedSymbols.find((symbol) => isMatchingSymbol(text, symbol, startIndex));
+const findTokenLength = (tokens: string[], text: string, startIndex: number): number => {
+	const sortedTokens = [...tokens].sort((a, b) => b.length - a.length);
+	const matchedToken = sortedTokens.find((token) => isMatchingToken(text, token, startIndex));
 
-	if (matchedSymbol) {
-		return matchedSymbol.length;
+	if (matchedToken) {
+		return matchedToken.length;
 	}
 
 	return 0;
@@ -84,15 +84,13 @@ const findDelimiterCommandWithDelimiterLength = (delimiterCommands: string[], te
 	const delimiterStartIndex = afterCommandIndex + whitespaceCount;
 
 	const sortedDelimiters = [...DELIMITERS].sort((a, b) => b.length - a.length);
-	const matchedDelimiter = sortedDelimiters.find((delimiter) => isMatchingSymbol(text, delimiter, delimiterStartIndex));
+	const matchedDelimiter = sortedDelimiters.find((delimiter) => isMatchingToken(text, delimiter, delimiterStartIndex));
 
-	if (matchedDelimiter) {
-		return matchedCommand.length + whitespaceCount + matchedDelimiter.length;
+	if (!matchedDelimiter) {
+		return 0;
 	}
 
-	// If no matching delimiter is found, return the length of command
-	// This helps users to easily identify and correct missing delimiter
-	return matchedCommand.length;
+	return matchedCommand.length + whitespaceCount + matchedDelimiter.length;
 }
 
 
@@ -131,7 +129,20 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 			return true;
 		}
 
-		const closingSymbolLength = findClosingSymbolLength(closingSymbols, text, i);
+		// This helps users easily identify and correct missing delimiters.
+		const rightCommandLength = findTokenLength(RIGHT_COMMANDS, text, i);
+		if (rightCommandLength > 0) {
+			// If the right command + delimiter is successfully found, the program will not reach this line.
+			i += rightCommandLength;
+
+			if (i <= pos) continue;
+
+			setCursor(view, i);
+
+			return true;
+		}
+
+		const closingSymbolLength = findTokenLength(closingSymbols, text, i);
 		if (closingSymbolLength > 0) {
 			i += closingSymbolLength;
 
