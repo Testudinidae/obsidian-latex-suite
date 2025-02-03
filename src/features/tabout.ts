@@ -1,6 +1,7 @@
 import { EditorView } from "@codemirror/view";
 import { replaceRange, setCursor, getCharacterAtPos } from "src/utils/editor_utils";
 import { Context } from "src/utils/context";
+import { getLatexSuiteConfig } from "src/snippets/codemirror/config";
 
 
 const LEFT_COMMANDS = [
@@ -10,18 +11,6 @@ const LEFT_COMMANDS = [
 const RIGHT_COMMANDS = [
 	"\\right",
 	"\\bigr", "\\Bigr", "\\biggr", "\\Biggr"
-];
-const CLOSING_SYMBOLS = [
-	")",
-	"]", "\\rbrack",
-	"\\}", "\\rbrace",
-	"\\rangle",
-	"\\rvert",
-	"\\rVert",
-	"\\rfloor",
-	"\\rceil",
-	"\\urcorner",
-	"}"
 ];
 const DELIMITERS = [
 	"(", ")",
@@ -66,8 +55,8 @@ const isMatchingSymbol = (text: string, symbol: string, startIndex: number): boo
 }
 
 
-const findClosingSymbolLength = (text: string, startIndex: number): number => {
-	const sortedSymbols = [...CLOSING_SYMBOLS].sort((a, b) => b.length - a.length);
+const findClosingSymbolLength = (closingSymbols: string[], text: string, startIndex: number): number => {
+	const sortedSymbols = [...closingSymbols].sort((a, b) => b.length - a.length);
 	const matchedSymbol = sortedSymbols.find((symbol) => isMatchingSymbol(text, symbol, startIndex));
 
 	if (matchedSymbol) {
@@ -119,6 +108,8 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 	const d = view.state.doc;
 	const text = d.toString();
 
+	const closingSymbols = getLatexSuiteConfig(view).taboutClosingSymbols;
+
 	// Move to the next closing bracket
 	let i = start
 	while (i < end) {
@@ -140,7 +131,7 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 			return true;
 		}
 
-		const closingSymbolLength = findClosingSymbolLength(text, i);
+		const closingSymbolLength = findClosingSymbolLength(closingSymbols, text, i);
 		if (closingSymbolLength > 0) {
 			i += closingSymbolLength;
 
