@@ -4,15 +4,15 @@ import { Context } from "src/utils/context";
 import { getLatexSuiteConfig } from "src/snippets/codemirror/config";
 
 
-const LEFT_COMMANDS = [
+const SORTED_LEFT_COMMANDS = [
 	"\\left",
 	"\\bigl", "\\Bigl", "\\biggl", "\\Biggl"
-];
-const RIGHT_COMMANDS = [
+].sort((a, b) => b.length - a.length);
+const SORTED_RIGHT_COMMANDS = [
 	"\\right",
 	"\\bigr", "\\Bigr", "\\biggr", "\\Biggr"
-];
-const DELIMITERS = [
+].sort((a, b) => b.length - a.length);
+const SORTED_DELIMITERS = [
 	"(", ")",
 	"[", "]", "\\lbrack", "\\rbrack",
 	"\\{", "\\}", "\\lbrace", "\\rbrace",
@@ -26,7 +26,7 @@ const DELIMITERS = [
 	"\\uparrow", "\\downarrow",
 	"\\Uparrow", "\\Downarrow",
 	"."
-];
+].sort((a, b) => b.length - a.length);
 
 
 const isCommandEnd = (str: string): boolean => {
@@ -41,6 +41,7 @@ const isMatchingCommand = (text: string, command: string, startIndex: number): b
 
 	const nextChar = text.charAt(startIndex + command.length);
 	const isEndOfCommand = !/[a-zA-Z]/.test(nextChar);
+
 	return isEndOfCommand;
 }
 
@@ -55,8 +56,7 @@ const isMatchingToken = (text: string, token: string, startIndex: number): boole
 }
 
 
-const findTokenLength = (tokens: string[], text: string, startIndex: number): number => {
-	const sortedTokens = [...tokens].sort((a, b) => b.length - a.length);
+const findTokenLength = (sortedTokens: string[], text: string, startIndex: number): number => {
 	const matchedToken = sortedTokens.find((token) => isMatchingToken(text, token, startIndex));
 
 	if (matchedToken) {
@@ -67,8 +67,7 @@ const findTokenLength = (tokens: string[], text: string, startIndex: number): nu
 }
 
 
-const findDelimiterCommandWithDelimiterLength = (delimiterCommands: string[], text: string, startIndex: number): number => {
-	const sortedCommands = [...delimiterCommands].sort((a, b) => b.length - a.length);
+const findCommandWithDelimiterLength = (sortedCommands: string[], text: string, startIndex: number): number => {
 	const matchedCommand = sortedCommands.find((command) => isMatchingCommand(text, command, startIndex));
 
 	if (!matchedCommand) {
@@ -83,8 +82,7 @@ const findDelimiterCommandWithDelimiterLength = (delimiterCommands: string[], te
 	}
 	const delimiterStartIndex = afterCommandIndex + whitespaceCount;
 
-	const sortedDelimiters = [...DELIMITERS].sort((a, b) => b.length - a.length);
-	const matchedDelimiter = sortedDelimiters.find((delimiter) => isMatchingToken(text, delimiter, delimiterStartIndex));
+	const matchedDelimiter = SORTED_DELIMITERS.find((delimiter) => isMatchingToken(text, delimiter, delimiterStartIndex));
 
 	if (!matchedDelimiter) {
 		return 0;
@@ -106,19 +104,19 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 	const d = view.state.doc;
 	const text = d.toString();
 
-	const closingSymbols = getLatexSuiteConfig(view).taboutClosingSymbols;
+	const sortedClosingSymbols = getLatexSuiteConfig(view).sortedtaboutClosingSymbols;
 
 	// Move to the next closing bracket
-	let i = start
+	let i = start;
 	while (i < end) {
-		const leftDelimiterLength = findDelimiterCommandWithDelimiterLength(LEFT_COMMANDS, text, i);
+		const leftDelimiterLength = findCommandWithDelimiterLength(SORTED_LEFT_COMMANDS, text, i);
 		if (leftDelimiterLength > 0) {
 			i += leftDelimiterLength;
 
 			continue;
 		}
 
-		const rightDelimiterLength = findDelimiterCommandWithDelimiterLength(RIGHT_COMMANDS, text, i);
+		const rightDelimiterLength = findCommandWithDelimiterLength(SORTED_RIGHT_COMMANDS, text, i);
 		if (rightDelimiterLength > 0) {
 			i += rightDelimiterLength;
 
@@ -130,7 +128,7 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 		}
 
 		// This helps users easily identify and correct missing delimiters.
-		const rightCommandLength = findTokenLength(RIGHT_COMMANDS, text, i);
+		const rightCommandLength = findTokenLength(SORTED_RIGHT_COMMANDS, text, i);
 		if (rightCommandLength > 0) {
 			// If the right command + delimiter is successfully found, the program will not reach this line.
 			i += rightCommandLength;
@@ -142,7 +140,7 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 			return true;
 		}
 
-		const closingSymbolLength = findTokenLength(closingSymbols, text, i);
+		const closingSymbolLength = findTokenLength(sortedClosingSymbols, text, i);
 		if (closingSymbolLength > 0) {
 			i += closingSymbolLength;
 
