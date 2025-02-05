@@ -77,7 +77,7 @@ const findCommandWithDelimiterLength = (sortedCommands: string[], text: string, 
 	const afterCommandIndex = startIndex + matchedCommand.length;
 
 	let whitespaceCount = 0;
-	while (afterCommandIndex + whitespaceCount < text.length && /\s/.test(text.charAt(afterCommandIndex + whitespaceCount))) {
+	while (/\s/.test(text.charAt(afterCommandIndex + whitespaceCount))) {
 		whitespaceCount++;
 	}
 	const delimiterStartIndex = afterCommandIndex + whitespaceCount;
