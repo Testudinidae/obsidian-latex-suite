@@ -41,7 +41,7 @@ const findCommandWithDelimiterLength = (sortedCommands: string[], text: string, 
 	const beforeDelimiterIndex = endIndex - matchedDelimiter.length;
 
 	let whitespaceCount = 0;
-	while (beforeDelimiterIndex - whitespaceCount < text.length && /\s/.test(text.charAt(beforeDelimiterIndex - whitespaceCount - 1))) {
+	while (/\s/.test(text.charAt(beforeDelimiterIndex - whitespaceCount - 1))) {
 		whitespaceCount++;
 	}
 	const commandEndIndex = beforeDelimiterIndex - whitespaceCount;
