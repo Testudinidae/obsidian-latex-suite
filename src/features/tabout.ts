@@ -27,6 +27,7 @@ const SORTED_DELIMITERS = [
 	"\\Uparrow", "\\Downarrow",
 	"."
 ].sort((a, b) => b.length - a.length);
+let sortedOpeningSymbols: string[];
 let sortedClosingSymbols: string[];
 
 
@@ -97,6 +98,12 @@ const findLeftDelimiterLength = (text: string, startIndex: number): number => {
 	const leftDelimiterLength = findCommandWithDelimiterLength(SORTED_LEFT_COMMANDS, text, startIndex);
 	if (leftDelimiterLength)  return leftDelimiterLength;
 
+	const leftCommandLength = findTokenLength(SORTED_LEFT_COMMANDS, text, startIndex);
+	if (leftCommandLength)  return leftCommandLength;
+
+	const openingSymbolLength = findTokenLength(sortedOpeningSymbols, text, startIndex);
+	if (openingSymbolLength)  return openingSymbolLength;
+
 	return 0;
 }
 
@@ -128,6 +135,7 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 	const d = view.state.doc;
 	const text = d.toString();
 
+	sortedOpeningSymbols = getLatexSuiteConfig(view).sortedtaboutOpeningSymbols;
 	sortedClosingSymbols = getLatexSuiteConfig(view).sortedtaboutClosingSymbols;
 
 	// Move to the next closing bracket
@@ -205,7 +213,8 @@ export const reverseTabout = (view: EditorView, ctx: Context): boolean => {
 	const pos = view.state.selection.main.to;
 	const text = view.state.doc.toString();
 
-	const sortedOpeningSymbols = getLatexSuiteConfig(view).sortedtaboutOpeningSymbols;
+	sortedOpeningSymbols = getLatexSuiteConfig(view).sortedtaboutOpeningSymbols;
+	sortedClosingSymbols = getLatexSuiteConfig(view).sortedtaboutClosingSymbols;
 
 	// Move out of the equation.
 	if (pos === start) {
@@ -232,20 +241,7 @@ export const reverseTabout = (view: EditorView, ctx: Context): boolean => {
 	let previous_i = start;
 	let i = start;
 	while (i < end) {
-		const rightDelimiterLength = findCommandWithDelimiterLength(SORTED_RIGHT_COMMANDS, text, i);
-		if (rightDelimiterLength > 0) {
-			if (i >= pos) {
-				setCursor(view, previous_i);
-
-				return true;
-			}
-
-			i += rightDelimiterLength;
-
-			continue;
-		}
-
-		const leftDelimiterLength = findCommandWithDelimiterLength(SORTED_LEFT_COMMANDS, text, i);
+		const leftDelimiterLength = findLeftDelimiterLength(text, i);
 		if (leftDelimiterLength > 0) {
 			if (i >= pos) {
 				setCursor(view, previous_i);
@@ -265,53 +261,22 @@ export const reverseTabout = (view: EditorView, ctx: Context): boolean => {
 			continue;
 		}
 
-		const leftCommandLength = findTokenLength(SORTED_LEFT_COMMANDS, text, i);
-		if (leftCommandLength > 0) {
-			// If the left command + delimiter is successfully found, the program will not reach this line.
+		const rightDelimiterLength = findRightDelimiterLength(text, i);
+		if (rightDelimiterLength > 0) {
 			if (i >= pos) {
 				setCursor(view, previous_i);
 
 				return true;
 			}
 
-			previous_i = i;
-			i += leftCommandLength;
-
-			if (i >= pos) {
-				setCursor(view, previous_i);
-
-				return true;
-			}
-
-			// This helps users easily identify and correct missing delimiters.
-			// Set cursor to the next to the left coomand
-			previous_i = i;
-
-			continue;
-		}
-
-		const openingSymbolLength = findTokenLength(sortedOpeningSymbols, text, i);
-		if (openingSymbolLength > 0) {
-			if (i >= pos) {
-				setCursor(view, previous_i);
-
-				return true;
-			}
-
-			previous_i = i;
-			i += openingSymbolLength;
-
-			if (i >= pos) {
-				setCursor(view, previous_i);
-
-				return true;
-			}
+			i += rightDelimiterLength;
 
 			continue;
 		}
 
 		i++;
 	}
+
 	setCursor(view, previous_i);
 
 	return true;
