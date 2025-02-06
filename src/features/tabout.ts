@@ -120,11 +120,12 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 		if (rightDelimiterLength > 0) {
 			i += rightDelimiterLength;
 
-			if (i <= pos) continue;
+			if (i > pos) {
+				setCursor(view, i);
+				return true;
+			}
 
-			setCursor(view, i);
-
-			return true;
+			continue;
 		}
 
 		// This helps users easily identify and correct missing delimiters.
@@ -133,22 +134,24 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 			// If the right command + delimiter is successfully found, the program will not reach this line.
 			i += rightCommandLength;
 
-			if (i <= pos) continue;
+			if (i > pos) {
+				setCursor(view, i);
+				return true;
+			}
 
-			setCursor(view, i);
-
-			return true;
+			continue;
 		}
 
 		const closingSymbolLength = findTokenLength(sortedClosingSymbols, text, i);
 		if (closingSymbolLength > 0) {
 			i += closingSymbolLength;
 
-			if (i <= pos) continue;
+			if (i > pos) {
+				setCursor(view, i);
+				return true;
+			}
 
-			setCursor(view, i);
-
-			return true;
+			continue;
 		}
 
 		i++;
