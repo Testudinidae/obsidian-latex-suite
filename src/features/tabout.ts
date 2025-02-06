@@ -130,7 +130,7 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 	const d = view.state.doc;
 	const text = d.toString();
 
-	sortedClosingSymbols = getLatexSuiteConfig(view).sortedtaboutClosingSymbols;
+	sortedClosingSymbols = getLatexSuiteConfig(view).sortedTaboutClosingSymbols;
 
 	// Move to the next closing bracket
 	let i = start;
