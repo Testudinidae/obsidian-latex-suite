@@ -340,8 +340,10 @@ export class LatexSuiteSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.taboutEnabled)
 				.onChange(async (value) => {
 					this.plugin.settings.taboutEnabled = value;
+					
 					await this.plugin.saveSettings();
 				}));
+
 		new Setting(containerEl)
 			.setName("Closing brackets")
 			.setDesc("A list of closing brackets for tabout, separated by commas.")
@@ -472,14 +474,14 @@ export class LatexSuiteSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-		.setName("Remove closing $ when backspacing inside blank inline math")
-		.setDesc("Whether to also remove the closing $ when you delete the opening $ symbol inside blank inline math.")
-		.addToggle((toggle) => toggle
-			.setValue(this.plugin.settings.autoDelete$)
-			.onChange(async (value) => {
-				this.plugin.settings.autoDelete$ = value;
-				await this.plugin.saveSettings();
-			}));
+			.setName("Remove closing $ when backspacing inside blank inline math")
+			.setDesc("Whether to also remove the closing $ when you delete the opening $ symbol inside blank inline math.")
+			.addToggle((toggle) => toggle
+				.setValue(this.plugin.settings.autoDelete$)
+				.onChange(async (value) => {
+					this.plugin.settings.autoDelete$ = value;
+					await this.plugin.saveSettings();
+				}));
 
 		new Setting(containerEl)
 			.setName("Don't trigger snippets when IME is active")
