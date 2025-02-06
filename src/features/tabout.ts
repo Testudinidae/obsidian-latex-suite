@@ -4,29 +4,9 @@ import { Context } from "src/utils/context";
 import { getLatexSuiteConfig } from "src/snippets/codemirror/config";
 
 
-const SORTED_LEFT_COMMANDS = [
-	"\\left",
-	"\\bigl", "\\Bigl", "\\biggl", "\\Biggl"
-].sort((a, b) => b.length - a.length);
-const SORTED_RIGHT_COMMANDS = [
-	"\\right",
-	"\\bigr", "\\Bigr", "\\biggr", "\\Biggr"
-].sort((a, b) => b.length - a.length);
-const SORTED_DELIMITERS = [
-	"(", ")",
-	"[", "]", "\\lbrack", "\\rbrack",
-	"\\{", "\\}", "\\lbrace", "\\rbrace",
-	"<", ">", "\\langle", "\\rangle", "\\lt", "\\gt",
-	"|", "\\vert", "\\lvert", "\\rvert",
-	"\\|", "\\Vert", "\\lVert", "\\rVert",
-	"\\lfloor", "\\rfloor",
-	"\\lceil", "\\rceil",
-	"\\ulcorner", "\\urcorner",
-	"/", "\\\\", "\\backslash",
-	"\\uparrow", "\\downarrow",
-	"\\Uparrow", "\\Downarrow",
-	"."
-].sort((a, b) => b.length - a.length);
+let sortedLeftCommands: string[];
+let sortedRightCommands: string[];
+let sortedDelimiters: string[];
 let sortedOpeningSymbols: string[];
 let sortedClosingSymbols: string[];
 
@@ -84,7 +64,7 @@ const findCommandWithDelimiterLength = (sortedCommands: string[], text: string, 
 	}
 	const delimiterStartIndex = afterCommandIndex + whitespaceCount;
 
-	const matchedDelimiter = SORTED_DELIMITERS.find((delimiter) => isMatchingToken(text, delimiter, delimiterStartIndex));
+	const matchedDelimiter = sortedDelimiters.find((delimiter) => isMatchingToken(text, delimiter, delimiterStartIndex));
 
 	if (!matchedDelimiter) {
 		return 0;
@@ -95,10 +75,10 @@ const findCommandWithDelimiterLength = (sortedCommands: string[], text: string, 
 
 
 const findLeftDelimiterLength = (text: string, startIndex: number): number => {
-	const leftDelimiterLength = findCommandWithDelimiterLength(SORTED_LEFT_COMMANDS, text, startIndex);
+	const leftDelimiterLength = findCommandWithDelimiterLength(sortedLeftCommands, text, startIndex);
 	if (leftDelimiterLength) return leftDelimiterLength;
 
-	const leftCommandLength = findTokenLength(SORTED_LEFT_COMMANDS, text, startIndex);
+	const leftCommandLength = findTokenLength(sortedLeftCommands, text, startIndex);
 	if (leftCommandLength) return leftCommandLength;
 
 	const openingSymbolLength = findTokenLength(sortedOpeningSymbols, text, startIndex);
@@ -109,11 +89,11 @@ const findLeftDelimiterLength = (text: string, startIndex: number): number => {
 
 
 const findRightDelimiterLength = (text: string, startIndex: number): number => {
-	const rightDelimiterLength = findCommandWithDelimiterLength(SORTED_RIGHT_COMMANDS, text, startIndex);
+	const rightDelimiterLength = findCommandWithDelimiterLength(sortedRightCommands, text, startIndex);
 	if (rightDelimiterLength) return rightDelimiterLength;
 
 	// This helps users easily identify and correct missing delimiters.
-	const rightCommandLength = findTokenLength(SORTED_RIGHT_COMMANDS, text, startIndex);
+	const rightCommandLength = findTokenLength(sortedRightCommands, text, startIndex);
 	if (rightCommandLength) return rightCommandLength;
 
 	const closingSymbolLength = findTokenLength(sortedClosingSymbols, text, startIndex);
@@ -137,6 +117,9 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 	const d = view.state.doc;
 	const text = d.toString();
 
+	sortedLeftCommands = getLatexSuiteConfig(view).sortedTaboutLeftCommands
+	sortedRightCommands = getLatexSuiteConfig(view).sortedTaboutRightCommands
+	sortedDelimiters = getLatexSuiteConfig(view).sortedTaboutDelimiters
 	sortedOpeningSymbols = getLatexSuiteConfig(view).sortedTaboutOpeningSymbols;
 	sortedClosingSymbols = getLatexSuiteConfig(view).sortedTaboutClosingSymbols;
 
@@ -218,6 +201,9 @@ export const reverseTabout = (view: EditorView, ctx: Context): boolean => {
 	const d = view.state.doc;
 	const text = view.state.doc.toString();
 
+	sortedLeftCommands = getLatexSuiteConfig(view).sortedTaboutLeftCommands
+	sortedRightCommands = getLatexSuiteConfig(view).sortedTaboutRightCommands
+	sortedDelimiters = getLatexSuiteConfig(view).sortedTaboutDelimiters
 	sortedOpeningSymbols = getLatexSuiteConfig(view).sortedTaboutOpeningSymbols;
 	sortedClosingSymbols = getLatexSuiteConfig(view).sortedTaboutClosingSymbols;
 
