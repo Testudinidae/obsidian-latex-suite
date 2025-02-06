@@ -193,6 +193,130 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 }
 
 
+export const reverseTabout = (view: EditorView, ctx: Context): boolean => {
+	if (!ctx.mode.inMath()) return false;
+
+	const result = ctx.getBounds();
+	if (!result) return false;
+	const start = result.start;
+	const end = result.end;
+
+	const pos = view.state.selection.main.to;
+	const text = view.state.doc.toString();
+
+	const sortedOpeningSymbols = getLatexSuiteConfig(view).sortedtaboutOpeningSymbols;
+
+	// Move out of the equation.
+	if (pos === start) {
+		if (ctx.mode.inlineMath || ctx.mode.codeMath) {
+			setCursor(view, start - 1);
+		}
+		else {
+			let whitespaceCount = 0;
+			while (/[ 	]/.test(text.charAt(start - 2 - whitespaceCount - 1))) {
+				whitespaceCount++;
+			}
+			if (text.charAt(start - 2 - whitespaceCount - 1) == "\n") {
+				setCursor(view, start - 2 - whitespaceCount - 1);
+			}
+			else {
+				setCursor(view, start - 2);
+			}
+		}
+
+		return true;
+	}
+
+	// Move to the previous openinging bracket
+	let previous_i = start;
+	let i = start;
+	while (i < end) {
+		const rightDelimiterLength = findCommandWithDelimiterLength(SORTED_RIGHT_COMMANDS, text, i);
+		if (rightDelimiterLength > 0) {
+			if (i >= pos) {
+				setCursor(view, previous_i);
+
+				return true;
+			}
+
+			i += rightDelimiterLength;
+
+			continue;
+		}
+
+		const leftDelimiterLength = findCommandWithDelimiterLength(SORTED_LEFT_COMMANDS, text, i);
+		if (leftDelimiterLength > 0) {
+			if (i >= pos) {
+				setCursor(view, previous_i);
+
+				return true;
+			}
+
+			previous_i = i;
+			i += leftDelimiterLength;
+
+			if (i >= pos) {
+				setCursor(view, previous_i);
+
+				return true;
+			}
+
+			continue;
+		}
+
+		const leftCommandLength = findTokenLength(SORTED_LEFT_COMMANDS, text, i);
+		if (leftCommandLength > 0) {
+			// If the left command + delimiter is successfully found, the program will not reach this line.
+			if (i >= pos) {
+				setCursor(view, previous_i);
+
+				return true;
+			}
+
+			previous_i = i;
+			i += leftCommandLength;
+
+			if (i >= pos) {
+				setCursor(view, previous_i);
+
+				return true;
+			}
+
+			// This helps users easily identify and correct missing delimiters.
+			// Set cursor to the next to the left coomand
+			previous_i = i;
+
+			continue;
+		}
+
+		const openingSymbolLength = findTokenLength(sortedOpeningSymbols, text, i);
+		if (openingSymbolLength > 0) {
+			if (i >= pos) {
+				setCursor(view, previous_i);
+
+				return true;
+			}
+
+			previous_i = i;
+			i += openingSymbolLength;
+
+			if (i >= pos) {
+				setCursor(view, previous_i);
+
+				return true;
+			}
+
+			continue;
+		}
+
+		i++;
+	}
+	setCursor(view, previous_i);
+
+	return true;
+}
+
+
 export const shouldTaboutByCloseBracket = (view: EditorView, keyPressed: string) => {
 	const sel = view.state.selection.main;
 	if (!sel.empty) return;
