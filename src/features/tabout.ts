@@ -137,8 +137,8 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 	const d = view.state.doc;
 	const text = d.toString();
 
-	sortedOpeningSymbols = getLatexSuiteConfig(view).sortedtaboutOpeningSymbols;
-	sortedClosingSymbols = getLatexSuiteConfig(view).sortedtaboutClosingSymbols;
+	sortedOpeningSymbols = getLatexSuiteConfig(view).sortedTaboutOpeningSymbols;
+	sortedClosingSymbols = getLatexSuiteConfig(view).sortedTaboutClosingSymbols;
 
 	// Move to the next closing bracket
 	let i = start;
@@ -218,8 +218,8 @@ export const reverseTabout = (view: EditorView, ctx: Context): boolean => {
 	const d = view.state.doc;
 	const text = view.state.doc.toString();
 
-	sortedOpeningSymbols = getLatexSuiteConfig(view).sortedtaboutOpeningSymbols;
-	sortedClosingSymbols = getLatexSuiteConfig(view).sortedtaboutClosingSymbols;
+	sortedOpeningSymbols = getLatexSuiteConfig(view).sortedTaboutOpeningSymbols;
+	sortedClosingSymbols = getLatexSuiteConfig(view).sortedTaboutClosingSymbols;
 
 	const textBtwnStartAndCursor = d.sliceString(start, pos);
 	const isAtStart = textBtwnStartAndCursor.trim().length === 0;

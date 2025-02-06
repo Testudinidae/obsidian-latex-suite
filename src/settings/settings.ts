@@ -44,8 +44,8 @@ interface LatexSuiteRawSettings {
 interface LatexSuiteParsedSettings {
 	autofractionExcludedEnvs: Environment[];
 	matrixShortcutsEnvNames: string[];
-	sortedtaboutOpeningSymbols: string[];
-	sortedtaboutClosingSymbols: string[];
+	sortedTaboutOpeningSymbols: string[];
+	sortedTaboutClosingSymbols: string[];
 	autoEnlargeBracketsTriggers: string[];
 	forceMathLanguages: string[];
 }
@@ -124,8 +124,8 @@ export function processLatexSuiteSettings(snippets: Snippet[], settings: LatexSu
 		snippets: snippets,
 		autofractionExcludedEnvs: getAutofractionExcludedEnvs(settings.autofractionExcludedEnvs),
 		matrixShortcutsEnvNames: strToArray(settings.matrixShortcutsEnvNames),
-		sortedtaboutOpeningSymbols: strToArray(settings.taboutOpeningSymbols).sort((a, b) => b.length - a.length),
-		sortedtaboutClosingSymbols: strToArray(settings.taboutClosingSymbols).sort((a, b) => b.length - a.length),
+		sortedTaboutOpeningSymbols: strToArray(settings.taboutOpeningSymbols).sort((a, b) => b.length - a.length),
+		sortedTaboutClosingSymbols: strToArray(settings.taboutClosingSymbols).sort((a, b) => b.length - a.length),
 		autoEnlargeBracketsTriggers: strToArray(settings.autoEnlargeBracketsTriggers),
 		forceMathLanguages: strToArray(settings.forceMathLanguages),
 	}
