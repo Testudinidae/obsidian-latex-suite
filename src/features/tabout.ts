@@ -27,6 +27,7 @@ const SORTED_DELIMITERS = [
 	"\\Uparrow", "\\Downarrow",
 	"."
 ].sort((a, b) => b.length - a.length);
+let sortedClosingSymbols: string[];
 
 
 const isCommandEnd = (str: string): boolean => {
@@ -92,6 +93,29 @@ const findCommandWithDelimiterLength = (sortedCommands: string[], text: string, 
 }
 
 
+const findLeftDelimiterLength = (text: string, startIndex: number): number => {
+	const leftDelimiterLength = findCommandWithDelimiterLength(SORTED_LEFT_COMMANDS, text, startIndex);
+	if (leftDelimiterLength)  return leftDelimiterLength;
+
+	return 0;
+}
+
+
+const findRightDelimiterLength = (text: string, startIndex: number): number => {
+	const rightDelimiterLength = findCommandWithDelimiterLength(SORTED_RIGHT_COMMANDS, text, startIndex);
+	if (rightDelimiterLength)  return rightDelimiterLength;
+
+	// This helps users easily identify and correct missing delimiters.
+	const rightCommandLength = findTokenLength(SORTED_RIGHT_COMMANDS, text, startIndex);
+	if (rightCommandLength)  return rightCommandLength;
+
+	const closingSymbolLength = findTokenLength(sortedClosingSymbols, text, startIndex);
+	if (closingSymbolLength)  return closingSymbolLength;
+
+	return 0;
+}
+
+
 export const tabout = (view: EditorView, ctx: Context): boolean => {
 	if (!ctx.mode.inMath()) return false;
 
@@ -104,19 +128,12 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 	const d = view.state.doc;
 	const text = d.toString();
 
-	const sortedClosingSymbols = getLatexSuiteConfig(view).sortedtaboutClosingSymbols;
+	sortedClosingSymbols = getLatexSuiteConfig(view).sortedtaboutClosingSymbols;
 
 	// Move to the next closing bracket
 	let i = start;
 	while (i < end) {
-		const leftDelimiterLength = findCommandWithDelimiterLength(SORTED_LEFT_COMMANDS, text, i);
-		if (leftDelimiterLength > 0) {
-			i += leftDelimiterLength;
-
-			continue;
-		}
-
-		const rightDelimiterLength = findCommandWithDelimiterLength(SORTED_RIGHT_COMMANDS, text, i);
+		const rightDelimiterLength = findRightDelimiterLength(text, i);
 		if (rightDelimiterLength > 0) {
 			i += rightDelimiterLength;
 
@@ -128,28 +145,9 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 			continue;
 		}
 
-		// This helps users easily identify and correct missing delimiters.
-		const rightCommandLength = findTokenLength(SORTED_RIGHT_COMMANDS, text, i);
-		if (rightCommandLength > 0) {
-			// If the right command + delimiter is successfully found, the program will not reach this line.
-			i += rightCommandLength;
-
-			if (i > pos) {
-				setCursor(view, i);
-				return true;
-			}
-
-			continue;
-		}
-
-		const closingSymbolLength = findTokenLength(sortedClosingSymbols, text, i);
-		if (closingSymbolLength > 0) {
-			i += closingSymbolLength;
-
-			if (i > pos) {
-				setCursor(view, i);
-				return true;
-			}
+		const leftDelimiterLength = findLeftDelimiterLength(text, i);
+		if (leftDelimiterLength > 0) {
+			i += leftDelimiterLength;
 
 			continue;
 		}
