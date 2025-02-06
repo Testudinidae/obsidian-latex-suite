@@ -127,6 +127,7 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 	const text = d.toString();
 
 	sortedClosingSymbols = getLatexSuiteConfig(view).sortedTaboutClosingSymbols;
+	const skipSpace = getLatexSuiteConfig(view).taboutSkipSpace
 
 	// Move to the next closing bracket
 	let i = start;
@@ -136,7 +137,7 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 			i += rightDelimiterLength;
 
 			if (i > pos) {
-				if (/\s/.test(text.charAt(i))){
+				if (skipSpace && /\s/.test(text.charAt(i))){
 					i += 1;
 				}
 

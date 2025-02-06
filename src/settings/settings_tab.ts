@@ -340,7 +340,18 @@ export class LatexSuiteSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.taboutEnabled)
 				.onChange(async (value) => {
 					this.plugin.settings.taboutEnabled = value;
-					
+
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName("Skip Space After Tabout")
+			.setDesc("When enabled, the cursor will move past a space following the closing delimiter after tabbing out.")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.taboutSkipSpace)
+				.onChange(async (value) => {
+					this.plugin.settings.taboutSkipSpace = value;
+
 					await this.plugin.saveSettings();
 				}));
 
