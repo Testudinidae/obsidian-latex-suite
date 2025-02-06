@@ -96,13 +96,13 @@ const findCommandWithDelimiterLength = (sortedCommands: string[], text: string, 
 
 const findLeftDelimiterLength = (text: string, startIndex: number): number => {
 	const leftDelimiterLength = findCommandWithDelimiterLength(SORTED_LEFT_COMMANDS, text, startIndex);
-	if (leftDelimiterLength)  return leftDelimiterLength;
+	if (leftDelimiterLength) return leftDelimiterLength;
 
 	const leftCommandLength = findTokenLength(SORTED_LEFT_COMMANDS, text, startIndex);
-	if (leftCommandLength)  return leftCommandLength;
+	if (leftCommandLength) return leftCommandLength;
 
 	const openingSymbolLength = findTokenLength(sortedOpeningSymbols, text, startIndex);
-	if (openingSymbolLength)  return openingSymbolLength;
+	if (openingSymbolLength) return openingSymbolLength;
 
 	return 0;
 }
@@ -110,14 +110,14 @@ const findLeftDelimiterLength = (text: string, startIndex: number): number => {
 
 const findRightDelimiterLength = (text: string, startIndex: number): number => {
 	const rightDelimiterLength = findCommandWithDelimiterLength(SORTED_RIGHT_COMMANDS, text, startIndex);
-	if (rightDelimiterLength)  return rightDelimiterLength;
+	if (rightDelimiterLength) return rightDelimiterLength;
 
 	// This helps users easily identify and correct missing delimiters.
 	const rightCommandLength = findTokenLength(SORTED_RIGHT_COMMANDS, text, startIndex);
-	if (rightCommandLength)  return rightCommandLength;
+	if (rightCommandLength) return rightCommandLength;
 
 	const closingSymbolLength = findTokenLength(sortedClosingSymbols, text, startIndex);
-	if (closingSymbolLength)  return closingSymbolLength;
+	if (closingSymbolLength) return closingSymbolLength;
 
 	return 0;
 }
@@ -207,17 +207,23 @@ export const reverseTabout = (view: EditorView, ctx: Context): boolean => {
 
 	const result = ctx.getBounds();
 	if (!result) return false;
+
 	const start = result.start;
 	const end = result.end;
 
 	const pos = view.state.selection.main.to;
+
+	const d = view.state.doc;
 	const text = view.state.doc.toString();
 
 	sortedOpeningSymbols = getLatexSuiteConfig(view).sortedtaboutOpeningSymbols;
 	sortedClosingSymbols = getLatexSuiteConfig(view).sortedtaboutClosingSymbols;
 
+	const textBtwnStartAndCursor = d.sliceString(start, pos);
+	const isAtStart = textBtwnStartAndCursor.trim().length === 0;
+
 	// Move out of the equation.
-	if (pos === start) {
+	if (isAtStart) {
 		if (ctx.mode.inlineMath || ctx.mode.codeMath) {
 			setCursor(view, start - 1);
 		}
