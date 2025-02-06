@@ -128,10 +128,12 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 
 	const result = ctx.getBounds();
 	if (!result) return false;
+
 	const start = result.start;
 	const end = result.end;
 
 	const pos = view.state.selection.main.to;
+
 	const d = view.state.doc;
 	const text = d.toString();
 
