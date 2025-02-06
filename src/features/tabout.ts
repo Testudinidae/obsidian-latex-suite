@@ -95,7 +95,7 @@ const findCommandWithDelimiterLength = (sortedCommands: string[], text: string, 
 
 const findLeftDelimiterLength = (text: string, startIndex: number): number => {
 	const leftDelimiterLength = findCommandWithDelimiterLength(SORTED_LEFT_COMMANDS, text, startIndex);
-	if (leftDelimiterLength)  return leftDelimiterLength;
+	if (leftDelimiterLength) return leftDelimiterLength;
 
 	return 0;
 }
@@ -103,14 +103,14 @@ const findLeftDelimiterLength = (text: string, startIndex: number): number => {
 
 const findRightDelimiterLength = (text: string, startIndex: number): number => {
 	const rightDelimiterLength = findCommandWithDelimiterLength(SORTED_RIGHT_COMMANDS, text, startIndex);
-	if (rightDelimiterLength)  return rightDelimiterLength;
+	if (rightDelimiterLength) return rightDelimiterLength;
 
 	// This helps users easily identify and correct missing delimiters.
 	const rightCommandLength = findTokenLength(SORTED_RIGHT_COMMANDS, text, startIndex);
-	if (rightCommandLength)  return rightCommandLength;
+	if (rightCommandLength) return rightCommandLength;
 
 	const closingSymbolLength = findTokenLength(sortedClosingSymbols, text, startIndex);
-	if (closingSymbolLength)  return closingSymbolLength;
+	if (closingSymbolLength) return closingSymbolLength;
 
 	return 0;
 }
@@ -121,10 +121,12 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 
 	const result = ctx.getBounds();
 	if (!result) return false;
+
 	const start = result.start;
 	const end = result.end;
 
 	const pos = view.state.selection.main.to;
+
 	const d = view.state.doc;
 	const text = d.toString();
 
