@@ -101,7 +101,7 @@ export const handleKeydown = (key: string, shiftKey: boolean, ctrlKey: boolean, 
 		// check if the main cursor has something selected since ctx.mode only checks the main cursor.
 		//  This does give weird behaviour with multicursor.
 		if ((key === "Tab" && view.state.selection.main.empty)) {
-			if (shiftKey) {
+			if (settings.reverseTaboutEnabled && shiftKey) {
 				success = reverseTabout(view, ctx);
 			}
 			else {

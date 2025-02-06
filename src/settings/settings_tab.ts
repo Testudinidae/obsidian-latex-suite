@@ -340,8 +340,23 @@ export class LatexSuiteSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.taboutEnabled)
 				.onChange(async (value) => {
 					this.plugin.settings.taboutEnabled = value;
+
+					reverseTaboutSetting.settingEl.toggleClass("hidden", !value);
+
 					await this.plugin.saveSettings();
 				}));
+
+		const reverseTaboutSetting = new Setting(containerEl)
+			.setName("Reverse Tabout")
+			.setDesc("Whether reverse tabout is enabled.")
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.reverseTaboutEnabled)
+				.onChange(async (value) => {
+					this.plugin.settings.reverseTaboutEnabled = value;
+
+					await this.plugin.saveSettings();
+				}));
+
 		new Setting(containerEl)
 			.setName("Opening brackets")
 			.setDesc("A list of opening brackets for reverse tabout, separated by commas.")
@@ -353,6 +368,7 @@ export class LatexSuiteSettingTab extends PluginSettingTab {
 
 					await this.plugin.saveSettings();
 				}));
+
 		new Setting(containerEl)
 			.setName("Closing brackets")
 			.setDesc("A list of closing brackets for tabout, separated by commas.")
@@ -364,6 +380,9 @@ export class LatexSuiteSettingTab extends PluginSettingTab {
 
 					await this.plugin.saveSettings();
 				}));
+
+		const taboutEnabled = this.plugin.settings.taboutEnabled;
+		reverseTaboutSetting.settingEl.toggleClass("hidden", !taboutEnabled);
 	}
 
 	private displayAutoEnlargeBracketsSettings() {
@@ -483,14 +502,14 @@ export class LatexSuiteSettingTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-		.setName("Remove closing $ when backspacing inside blank inline math")
-		.setDesc("Whether to also remove the closing $ when you delete the opening $ symbol inside blank inline math.")
-		.addToggle((toggle) => toggle
-			.setValue(this.plugin.settings.autoDelete$)
-			.onChange(async (value) => {
-				this.plugin.settings.autoDelete$ = value;
-				await this.plugin.saveSettings();
-			}));
+			.setName("Remove closing $ when backspacing inside blank inline math")
+			.setDesc("Whether to also remove the closing $ when you delete the opening $ symbol inside blank inline math.")
+			.addToggle((toggle) => toggle
+				.setValue(this.plugin.settings.autoDelete$)
+				.onChange(async (value) => {
+					this.plugin.settings.autoDelete$ = value;
+					await this.plugin.saveSettings();
+				}));
 
 		new Setting(containerEl)
 			.setName("Don't trigger snippets when IME is active")
