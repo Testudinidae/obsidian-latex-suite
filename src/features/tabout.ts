@@ -290,12 +290,6 @@ export const reverseTabout = (view: EditorView, ctx: Context): boolean => {
 		// Skip right command + delimiter
 		const rightDelimiterLength = findCommandWithDelimiterLength(sortedRightCommands, text, i);
 		if (rightDelimiterLength > 0) {
-			if (i >= pos) {
-				setCursor(view, previous_i);
-
-				return true;
-			}
-
 			i += rightDelimiterLength;
 
 			continue;
