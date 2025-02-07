@@ -93,21 +93,9 @@ const findCommandWithDelimiterLength = (sortedCommands: string[], text: string, 
 }
 
 
-const findLeftDelimiterLength = (text: string, startIndex: number): number => {
-	const leftDelimiterLength = findCommandWithDelimiterLength(SORTED_LEFT_COMMANDS, text, startIndex);
-	if (leftDelimiterLength) return leftDelimiterLength;
-
-	return 0;
-}
-
-
 const findRightDelimiterLength = (text: string, startIndex: number): number => {
 	const rightDelimiterLength = findCommandWithDelimiterLength(SORTED_RIGHT_COMMANDS, text, startIndex);
 	if (rightDelimiterLength) return rightDelimiterLength;
-
-	// This helps users easily identify and correct missing delimiters.
-	const rightCommandLength = findTokenLength(SORTED_RIGHT_COMMANDS, text, startIndex);
-	if (rightCommandLength) return rightCommandLength;
 
 	const closingSymbolLength = findTokenLength(sortedClosingSymbols, text, startIndex);
 	if (closingSymbolLength) return closingSymbolLength;
@@ -147,7 +135,21 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 			continue;
 		}
 
-		const leftDelimiterLength = findLeftDelimiterLength(text, i);
+		// Attempt to match only the right command if matching right command + delimiter fails
+		const rightCommandLength = findTokenLength(SORTED_RIGHT_COMMANDS, text, i);
+		if (rightCommandLength > 0) {
+			i += rightCommandLength;
+
+			if (i > pos) {
+				setCursor(view, i);
+				return true;
+			}
+
+			continue;
+		}
+
+		// Skip left command + delimiter
+		const leftDelimiterLength = findCommandWithDelimiterLength(SORTED_LEFT_COMMANDS, text, i);
 		if (leftDelimiterLength > 0) {
 			i += leftDelimiterLength;
 
