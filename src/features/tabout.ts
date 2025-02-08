@@ -128,7 +128,7 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 			i += rightDelimiterLength;
 
 			if (i > pos) {
-				if (/\s/.test(text.charAt(i))) {
+				if (/[\t ]/.test(text.charAt(i))) {
 					i += 1;
 				}
 
