@@ -128,6 +128,10 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 			i += rightDelimiterLength;
 
 			if (i > pos) {
+				if (/[\t ]/.test(text.charAt(i))) {
+					i += 1;
+				}
+
 				setCursor(view, i);
 				return true;
 			}
