@@ -1,7 +1,7 @@
 import { EditorView } from "@codemirror/view";
 import { EditorSelection, SelectionRange } from "@codemirror/state";
 import { Context, Bounds } from "src/utils/context";
-import { setCursor } from "src/utils/editor_utils";
+import { setCursor, replaceRange } from "src/utils/editor_utils";
 import { getLatexSuiteConfig } from "src/snippets/codemirror/config";
 import { tabout } from "src/features/tabout";
 
@@ -9,17 +9,66 @@ import { tabout } from "src/features/tabout";
 const ALIGNMENT = " & ";
 const LINE_BREAK = " \\\\\n"
 const LINE_BREAK_INLINE = " \\\\ "
+const END_LINE_BREAK = LINE_BREAK.trimEnd();
+let trimWhitespace = false;
+let trimAlignment = false;
+let hlineLineBreakEnabled = false;
+let trimEmptyLineAfterEnv = false;
+let addLineBreakAfterEnv = false;
+
+
+const isLineBreak = (separator: string) => {
+	return separator.contains("\\\\");
+}
+
+
+const isMultiLineBreak = (separator: string): boolean => {
+	return separator.contains("\\\\") && separator.contains("\n");
+}
+
+
+const isHline = (line: string): boolean => {
+	return line.trimEnd().endsWith("\\hline");
+}
 
 
 const generateSeparatorChange = (separator: string, view: EditorView, range: SelectionRange): { from: number, to: number, insert: string } => {
 	const d = view.state.doc;
 
+	const fromLine = d.lineAt(range.from);
+	const textBeforeFrom = d.sliceString(fromLine.from, range.from).trimStart();  // Preserve indents
+
+	const toLine = d.lineAt(range.from);
+	const textAfterTo = d.sliceString(range.to, toLine.to);
+
+	let from = range.from;
+	let to = range.to;
+
+	if (!hlineLineBreakEnabled && isMultiLineBreak(separator) && isHline(textBeforeFrom)) {
+		separator = "\n";
+	}
+
+	if (trimWhitespace) {
+		// If at the beginning of the line
+		if (textBeforeFrom === "") {
+			separator = separator.match(/^[ \t]*([\s\S]*)$/)[1];
+		}
+
+		// Extend selection to include trailing whitespace before `from`
+		if (trimAlignment && isLineBreak(separator)) {
+			from -= textBeforeFrom.match(/\s*\&?\s*$/)[0].length;
+		}
+		else {
+			from -= textBeforeFrom.match(/\s*$/)[0].length;
+		}
+		to += textAfterTo.match(/^\s*/)[0].length;  // Extend selection to include leading whitespace after `to`
+	}
+
 	// Insert indents
-	const fromLineText = d.lineAt(range.from).text;
-	const leadingIndents = fromLineText.match(/^\s*/)[0];
+	const leadingIndents = fromLine.text.match(/^\s*/)[0];
 	separator = separator.replaceAll("\n", `\n${leadingIndents}`);
 
-	return { from: range.from, to: range.to, insert: separator };
+	return { from: from, to: to, insert: separator };
 }
 
 
@@ -86,7 +135,6 @@ export const runMatrixShortcuts = (view: EditorView, ctx: Context, key: string, 
 	// Check whether we are inside a matrix / align / case environment
 	let isInsideAnEnv = false;
 	let env;
-
 	for (const envName of settings.matrixShortcutsEnvNames) {
 		env = { openSymbol: "\\begin{" + envName + "}", closeSymbol: "\\end{" + envName + "}" };
 
@@ -95,6 +143,10 @@ export const runMatrixShortcuts = (view: EditorView, ctx: Context, key: string, 
 	}
 
 	if (!isInsideAnEnv) return false;
+
+	trimWhitespace = settings.matrixShortcutsTrimWhitespace;
+	trimAlignment = settings.matrixShortcutsTrimAlignment;
+	hlineLineBreakEnabled = settings.matrixShortcutsHlineLineBreakEnabled;
 
 	if (key === "Tab" && view.state.selection.main.empty) {
 		if (shiftKey) {
@@ -126,6 +178,40 @@ export const runMatrixShortcuts = (view: EditorView, ctx: Context, key: string, 
 				setCursor(view, pos);
 			}
 			else {
+				// Move cursor to end of next line
+				let d = view.state.doc;
+				const envBound = ctx.getEnvironmentBound(ctx.pos, env);
+				const envText = d.sliceString(envBound.start, envBound.end);
+
+				trimEmptyLineAfterEnv = settings.matrixShortcutsTrimEmptyLineAfterEnv;
+				addLineBreakAfterEnv = settings.matrixShortcutsAddLineBreakAfterEnv;
+
+				let line = d.lineAt(ctx.pos);
+				let lineNo = line.number;
+				let nextLine = d.line(lineNo + 1);
+				let newPos = nextLine.to;
+
+				if (newPos > envBound.end) {
+					if (trimEmptyLineAfterEnv && line.text.trim() === "") {
+						replaceRange(view, line.from, nextLine.from, "");
+
+						d = view.state.doc;
+						lineNo--;
+						line = d.line(lineNo);
+						nextLine = d.line(lineNo + 1);
+						newPos = nextLine.to;
+					}
+
+					if (addLineBreakAfterEnv && !envText.trimEnd().endsWith("\\\\")) {
+						setCursor(view, line.to);
+
+						applySeparator(END_LINE_BREAK, view);
+
+						d = view.state.doc;
+						nextLine = d.line(lineNo + 1);
+						newPos = nextLine.to;
+					}
+				}
 				tabout(view, ctx);
 			}
 		}

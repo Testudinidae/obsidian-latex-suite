@@ -23,6 +23,11 @@ interface LatexSuiteBasicSettings {
 	autofractionSymbol: string;
 	autofractionBreakingChars: string;
 	matrixShortcutsEnabled: boolean;
+	matrixShortcutsTrimWhitespace: boolean;
+	matrixShortcutsTrimAlignment: boolean;
+	matrixShortcutsHlineLineBreakEnabled: boolean;
+	matrixShortcutsTrimEmptyLineAfterEnv: boolean;
+	matrixShortcutsAddLineBreakAfterEnv: boolean;
 	taboutEnabled: boolean;
 	reverseTaboutEnabled: boolean;
 	taboutSkipSpace: boolean;
@@ -84,6 +89,11 @@ export const DEFAULT_SETTINGS: LatexSuitePluginSettings = {
 	autofractionSymbol: "\\frac",
 	autofractionBreakingChars: "+-=\t",
 	matrixShortcutsEnabled: true,
+	matrixShortcutsTrimWhitespace: true,
+	matrixShortcutsTrimAlignment: true,
+	matrixShortcutsHlineLineBreakEnabled: false,
+	matrixShortcutsTrimEmptyLineAfterEnv: true,
+	matrixShortcutsAddLineBreakAfterEnv: false,
 	taboutEnabled: true,
 	reverseTaboutEnabled: true,
 	taboutSkipSpace: true,
