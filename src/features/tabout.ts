@@ -4,29 +4,10 @@ import { Context } from "src/utils/context";
 import { getLatexSuiteConfig } from "src/snippets/codemirror/config";
 
 
-const SORTED_LEFT_COMMANDS = [
-	"\\left",
-	"\\bigl", "\\Bigl", "\\biggl", "\\Biggl"
-].sort((a, b) => b.length - a.length);
-const SORTED_RIGHT_COMMANDS = [
-	"\\right",
-	"\\bigr", "\\Bigr", "\\biggr", "\\Biggr"
-].sort((a, b) => b.length - a.length);
-const SORTED_DELIMITERS = [
-	"(", ")",
-	"[", "]", "\\lbrack", "\\rbrack",
-	"\\{", "\\}", "\\lbrace", "\\rbrace",
-	"<", ">", "\\langle", "\\rangle", "\\lt", "\\gt",
-	"|", "\\vert", "\\lvert", "\\rvert",
-	"\\|", "\\Vert", "\\lVert", "\\rVert",
-	"\\lfloor", "\\rfloor",
-	"\\lceil", "\\rceil",
-	"\\ulcorner", "\\urcorner",
-	"/", "\\\\", "\\backslash",
-	"\\uparrow", "\\downarrow",
-	"\\Uparrow", "\\Downarrow",
-	"."
-].sort((a, b) => b.length - a.length);
+let sortedLeftCommands: string[] = [];
+let sortedRightCommands: string[] = [];
+let sortedDelimiters: string[] = [];
+let sortedOpeningSymbols: string[] = [];
 let sortedClosingSymbols: string[] = [];
 
 
@@ -83,7 +64,7 @@ const findCommandWithDelimiterLength = (sortedCommands: string[], text: string, 
 	}
 	const delimiterStartIndex = afterCommandIndex + whitespaceCount;
 
-	const matchedDelimiter = SORTED_DELIMITERS.find((delimiter) => isMatchingToken(text, delimiter, delimiterStartIndex));
+	const matchedDelimiter = sortedDelimiters.find((delimiter) => isMatchingToken(text, delimiter, delimiterStartIndex));
 
 	if (!matchedDelimiter) {
 		return 0;
@@ -93,8 +74,19 @@ const findCommandWithDelimiterLength = (sortedCommands: string[], text: string, 
 }
 
 
+const findLeftDelimiterLength = (text: string, startIndex: number): number => {
+	const leftDelimiterLength = findCommandWithDelimiterLength(sortedLeftCommands, text, startIndex);
+	if (leftDelimiterLength) return leftDelimiterLength;
+
+	const openingSymbolLength = findTokenLength(sortedOpeningSymbols, text, startIndex);
+	if (openingSymbolLength) return openingSymbolLength;
+
+	return 0;
+}
+
+
 const findRightDelimiterLength = (text: string, startIndex: number): number => {
-	const rightDelimiterLength = findCommandWithDelimiterLength(SORTED_RIGHT_COMMANDS, text, startIndex);
+	const rightDelimiterLength = findCommandWithDelimiterLength(sortedRightCommands, text, startIndex);
 	if (rightDelimiterLength) return rightDelimiterLength;
 
 	const closingSymbolLength = findTokenLength(sortedClosingSymbols, text, startIndex);
@@ -118,6 +110,9 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 	const d = view.state.doc;
 	const text = d.toString();
 
+	sortedLeftCommands = getLatexSuiteConfig(view).sortedTaboutLeftCommands;
+	sortedRightCommands = getLatexSuiteConfig(view).sortedTaboutRightCommands;
+	sortedDelimiters = getLatexSuiteConfig(view).sortedTaboutDelimiters;
 	sortedClosingSymbols = getLatexSuiteConfig(view).sortedTaboutClosingSymbols;
 	const skipSpace = getLatexSuiteConfig(view).taboutSkipSpace
 
@@ -141,7 +136,7 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 		}
 
 		// Attempt to match only the right command if matching right command + delimiter fails
-		const rightCommandLength = findTokenLength(SORTED_RIGHT_COMMANDS, text, i);
+		const rightCommandLength = findTokenLength(sortedRightCommands, text, i);
 		if (rightCommandLength > 0) {
 			i += rightCommandLength;
 
@@ -154,7 +149,7 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 		}
 
 		// Skip left command + delimiter
-		const leftDelimiterLength = findCommandWithDelimiterLength(SORTED_LEFT_COMMANDS, text, i);
+		const leftDelimiterLength = findCommandWithDelimiterLength(sortedLeftCommands, text, i);
 		if (leftDelimiterLength > 0) {
 			i += leftDelimiterLength;
 
@@ -198,6 +193,115 @@ export const tabout = (view: EditorView, ctx: Context): boolean => {
 		replaceRange(view, line.from, line.to, line.text.trim());
 
 	}
+
+	return true;
+}
+
+
+export const reverseTabout = (view: EditorView, ctx: Context): boolean => {
+	if (!ctx.mode.inMath()) return false;
+
+	const result = ctx.getBounds();
+	if (!result) return false;
+
+	const start = result.start;
+	const end = result.end;
+
+	const pos = view.state.selection.main.to;
+
+	const d = view.state.doc;
+	const text = d.toString();
+
+	sortedLeftCommands = getLatexSuiteConfig(view).sortedTaboutLeftCommands;
+	sortedRightCommands = getLatexSuiteConfig(view).sortedTaboutRightCommands;
+	sortedDelimiters = getLatexSuiteConfig(view).sortedTaboutDelimiters;
+	sortedOpeningSymbols = getLatexSuiteConfig(view).sortedTaboutOpeningSymbols;
+
+	const textBtwnStartAndCursor = d.sliceString(start, pos);
+	const isAtStart = textBtwnStartAndCursor.trim().length === 0;
+
+	// Move out of the equation.
+	if (isAtStart) {
+		if (ctx.mode.inlineMath || ctx.mode.codeMath) {
+			setCursor(view, start - 1);
+		}
+		else {
+			let whitespaceCount = 0;
+			while (/[ 	]/.test(text.charAt(start - 2 - whitespaceCount - 1))) {
+				whitespaceCount++;
+			}
+			if (text.charAt(start - 2 - whitespaceCount - 1) == "\n") {
+				setCursor(view, start - 2 - whitespaceCount - 1);
+			}
+			else {
+				setCursor(view, start - 2);
+			}
+		}
+
+		return true;
+	}
+
+	// Move to the previous openinging bracket
+	let previous_i = start;
+	let i = start;
+	while (i < end) {
+		const leftDelimiterLength = findLeftDelimiterLength(text, i);
+		if (leftDelimiterLength > 0) {
+			if (i >= pos) {
+				setCursor(view, previous_i);
+
+				return true;
+			}
+
+			previous_i = i;
+			i += leftDelimiterLength;
+
+			if (i >= pos) {
+				setCursor(view, previous_i);
+
+				return true;
+			}
+
+			continue;
+		}
+
+		// Attempt to match only the left command if matching left command + delimiter fails
+		const leftCommandLength = findTokenLength(sortedLeftCommands, text, i);
+		if (leftCommandLength > 0) {
+			if (i >= pos) {
+				setCursor(view, previous_i);
+
+				return true;
+			}
+
+			previous_i = i;
+			i += leftCommandLength;
+
+			if (i >= pos) {
+				setCursor(view, previous_i);
+
+				return true;
+			}
+			
+			// This helps users easily identify and correct missing delimiters.
+			// Set cursor to the next to the left coomand
+			previous_i = i;
+			
+			continue;
+		}
+
+		// Skip right command + delimiter
+		const rightDelimiterLength = findCommandWithDelimiterLength(sortedRightCommands, text, i);
+		if (rightDelimiterLength > 0) {
+			i += rightDelimiterLength;
+
+			continue;
+		}
+
+		i++;
+	}
+
+	setCursor(view, previous_i);
 
 	return true;
 }

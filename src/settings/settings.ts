@@ -24,6 +24,7 @@ interface LatexSuiteBasicSettings {
 	autofractionBreakingChars: string;
 	matrixShortcutsEnabled: boolean;
 	taboutEnabled: boolean;
+	reverseTaboutEnabled: boolean;
 	taboutSkipSpace: boolean;
 	autoEnlargeBrackets: boolean;
 	wordDelimiters: string;
@@ -35,7 +36,11 @@ interface LatexSuiteBasicSettings {
 interface LatexSuiteRawSettings {
 	autofractionExcludedEnvs: string;
 	matrixShortcutsEnvNames: string;
+	taboutOpeningSymbols: string;
 	taboutClosingSymbols: string;
+	taboutLeftCommands: string,
+	taboutRightCommands: string,
+	taboutDelimiters: string;
 	autoEnlargeBracketsTriggers: string;
 	forceMathLanguages: string;
 }
@@ -43,7 +48,11 @@ interface LatexSuiteRawSettings {
 interface LatexSuiteParsedSettings {
 	autofractionExcludedEnvs: Environment[];
 	matrixShortcutsEnvNames: string[];
+	sortedTaboutOpeningSymbols: string[];
 	sortedTaboutClosingSymbols: string[];
+	sortedTaboutLeftCommands: string[];
+	sortedTaboutRightCommands: string[];
+	sortedTaboutDelimiters: string[];
 	autoEnlargeBracketsTriggers: string[];
 	forceMathLanguages: string[];
 }
@@ -76,6 +85,7 @@ export const DEFAULT_SETTINGS: LatexSuitePluginSettings = {
 	autofractionBreakingChars: "+-=\t",
 	matrixShortcutsEnabled: true,
 	taboutEnabled: true,
+	reverseTaboutEnabled: true,
 	taboutSkipSpace: true,
 	autoEnlargeBrackets: true,
 	wordDelimiters: "., +-\\n\t:;!?\\/{}[]()=~$",
@@ -87,7 +97,11 @@ export const DEFAULT_SETTINGS: LatexSuitePluginSettings = {
 		["\\\\pu{", "}"]
 	]`,
 	matrixShortcutsEnvNames: "pmatrix, cases, align, gather, bmatrix, Bmatrix, vmatrix, Vmatrix, array, matrix",
+	taboutOpeningSymbols: "(, [, \\lbrack, \\{, \\lbrace, \\langle, \\lvert, \\lVert, \\lfloor, \\lceil, \\ulcorner, {",
 	taboutClosingSymbols: "), ], \\rbrack, \\}, \\rbrace, \\rangle, \\rvert, \\rVert, \\rfloor, \\rceil, \\urcorner, }",
+	taboutLeftCommands: "\\left, \\bigl, \\Bigl, \\biggl, \\Biggl",
+	taboutRightCommands: "\\right, \\bigr, \\Bigr, \\biggr, \\Biggr",
+	taboutDelimiters: "(, ), [, ], \\lbrack, \\rbrack, \\{, \\}, \\lbrace, \\rbrace, <, >, \\langle, \\rangle, \\lt, \\gt, |, \\vert, \\lvert, \\rvert, \\|, \\Vert, \\lVert, \\rVert, \\lfloor, \\rfloor, \\lceil, \\rceil, \\ulcorner, \\urcorner, /, \\\\, \\backslash, \\uparrow, \\downarrow, \\Uparrow, \\Downarrow, .",
 	autoEnlargeBracketsTriggers: "sum, int, frac, prod, bigcup, bigcap",
 	forceMathLanguages: "math",
 }
@@ -121,7 +135,11 @@ export function processLatexSuiteSettings(snippets: Snippet[], settings: LatexSu
 		snippets: snippets,
 		autofractionExcludedEnvs: getAutofractionExcludedEnvs(settings.autofractionExcludedEnvs),
 		matrixShortcutsEnvNames: strToArray(settings.matrixShortcutsEnvNames),
+		sortedTaboutOpeningSymbols: strToArray(settings.taboutOpeningSymbols).sort((a, b) => b.length - a.length),
 		sortedTaboutClosingSymbols: strToArray(settings.taboutClosingSymbols).sort((a, b) => b.length - a.length),
+		sortedTaboutLeftCommands: strToArray(settings.taboutLeftCommands).sort((a, b) => b.length - a.length),
+		sortedTaboutRightCommands: strToArray(settings.taboutRightCommands).sort((a, b) => b.length - a.length),
+		sortedTaboutDelimiters: strToArray(settings.taboutDelimiters).sort((a, b) => b.length - a.length),
 		autoEnlargeBracketsTriggers: strToArray(settings.autoEnlargeBracketsTriggers),
 		forceMathLanguages: strToArray(settings.forceMathLanguages),
 	}
