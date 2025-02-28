@@ -1,6 +1,6 @@
 import { EditorView } from "@codemirror/view";
 import { EditorSelection, SelectionRange } from "@codemirror/state";
-import { Context } from "src/utils/context";
+import { Context, Bounds } from "src/utils/context";
 import { setCursor } from "src/utils/editor_utils";
 import { getLatexSuiteConfig } from "src/snippets/codemirror/config";
 import { tabout } from "src/features/tabout";
@@ -40,14 +40,53 @@ const applySeparator = (separator: string, view: EditorView) => {
 }
 
 
+const findNextCellEnd = (view: EditorView, pos: number, envBound: Bounds): number => {
+	let d = view.state.doc;
+
+	let line = d.lineAt(pos);
+	while (line.from < envBound.end) {
+		const trimmedLine = line.text.trimStart();
+		const indentLength = line.length - trimmedLine.length;
+		const effectiveLineStart = line.from + indentLength;
+
+		const matches = [...trimmedLine.matchAll(/[\t ]?(?:&|\\\\)/g)];
+		const match = matches.find(match => (effectiveLineStart + match.index > pos) && (effectiveLineStart + match.index < envBound.end));
+		if (match) {
+			return effectiveLineStart + match.index;
+		}
+
+		if (line.number + 1 >= d.lines) break;
+
+		line = d.line(line.number + 1);
+	}
+
+	const envContent = d.sliceString(envBound.start, envBound.end);
+	const trimmedEnvContent = envContent.trimEnd();
+	const endsWithBreak = trimmedEnvContent.endsWith("\\\\");
+	if (endsWithBreak) {
+		return -1;
+	}
+
+	line = d.lineAt(envBound.start + trimmedEnvContent.length);
+	const lastPos = Math.min(line.to, envBound.end);
+
+	if (pos < lastPos) {
+		return lastPos;
+	}
+
+	return -1;
+}
+
+
 export const runMatrixShortcuts = (view: EditorView, ctx: Context, key: string, shiftKey: boolean): boolean => {
 	const settings = getLatexSuiteConfig(view);
 
 	// Check whether we are inside a matrix / align / case environment
 	let isInsideAnEnv = false;
+	let env;
 
 	for (const envName of settings.matrixShortcutsEnvNames) {
-		const env = { openSymbol: "\\begin{" + envName + "}", closeSymbol: "\\end{" + envName + "}" };
+		env = { openSymbol: "\\begin{" + envName + "}", closeSymbol: "\\end{" + envName + "}" };
 
 		isInsideAnEnv = ctx.isWithinEnvironment(ctx.pos, env);
 		if (isInsideAnEnv) break;
@@ -56,7 +95,21 @@ export const runMatrixShortcuts = (view: EditorView, ctx: Context, key: string, 
 	if (!isInsideAnEnv) return false;
 
 	if (key === "Tab" && view.state.selection.main.empty) {
-		applySeparator(ALIGNMENT, view);
+		if (shiftKey) {
+			// Move cursor to end of cell
+			const envBound = ctx.getEnvironmentBound(ctx.pos, env);
+			const pos = findNextCellEnd(view, ctx.pos, envBound);
+
+			if (pos >= 0) {
+				setCursor(view, pos);
+			}
+			else {
+				tabout(view, ctx);
+			}
+		}
+		else {
+			applySeparator(ALIGNMENT, view);
+		}
 
 		return true;
 	}
