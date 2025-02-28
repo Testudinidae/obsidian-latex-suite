@@ -40,7 +40,7 @@ const applySeparator = (separator: string, view: EditorView) => {
 }
 
 
-const findNextRowEnd = (view: EditorView, pos: number, envBound: Bounds): number => {
+const findNextEnd = (pattern: RegExp, view: EditorView, pos: number, envBound: Bounds) => {
 	let d = view.state.doc;
 
 	let line = d.lineAt(pos);
@@ -49,7 +49,7 @@ const findNextRowEnd = (view: EditorView, pos: number, envBound: Bounds): number
 		const indentLength = line.length - trimmedLine.length;
 		const effectiveLineStart = line.from + indentLength;
 
-		const matches = [...trimmedLine.matchAll(/[\t ]?\\\\/g)];
+		const matches = [...trimmedLine.matchAll(pattern)];
 		const match = matches.find(match => (effectiveLineStart + match.index > pos) && (effectiveLineStart + match.index < envBound.end));
 		if (match) {
 			return effectiveLineStart + match.index;
@@ -76,6 +76,8 @@ const findNextRowEnd = (view: EditorView, pos: number, envBound: Bounds): number
 
 	return -1;
 }
+const findNextRowEnd = findNextEnd.bind(null, /[\t ]?\\\\/g)
+const findNextCellEnd = findNextEnd.bind(null, /[\t ]?(?:&|\\\\)/g)
 
 
 export const runMatrixShortcuts = (view: EditorView, ctx: Context, key: string, shiftKey: boolean): boolean => {
@@ -95,7 +97,21 @@ export const runMatrixShortcuts = (view: EditorView, ctx: Context, key: string, 
 	if (!isInsideAnEnv) return false;
 
 	if (key === "Tab" && view.state.selection.main.empty) {
-		applySeparator(ALIGNMENT, view);
+		if (shiftKey) {
+			// Move cursor to end of cell
+			const envBound = ctx.getEnvironmentBound(ctx.pos, env);
+			const pos = findNextCellEnd(view, ctx.pos, envBound);
+
+			if (pos >= 0) {
+				setCursor(view, pos);
+			}
+			else {
+				tabout(view, ctx);
+			}
+		}
+		else {
+			applySeparator(ALIGNMENT, view);
+		}
 
 		return true;
 	}
